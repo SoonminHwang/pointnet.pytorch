@@ -27,7 +27,7 @@ class PartDataset(data.Dataset):
             for line in f:
                 ls = line.strip().split()
                 self.cat[ls[0]] = ls[1]
-        #print(self.cat)
+        
         if not class_choice is  None:
             self.cat = {k:v for k,v in self.cat.items() if k in class_choice}
 
@@ -50,11 +50,19 @@ class PartDataset(data.Dataset):
                 self.meta[item].append((os.path.join(dir_point, token + '.pts'), os.path.join(dir_seg, token + '.seg')))
 
         self.datapath = []
-        for item in self.cat:
-            for fn in self.meta[item]:
+#         for item in self.cat:
+#             # for fn in self.meta[item]:
+#             for fn in self.meta[item][::10]:    # use subset for fast training/testing in hands-on session
+#                 self.datapath.append((item, fn[0], fn[1]))
+
+        cat_name = sorted(self.cat)
+        for item in cat_name:
+            # for fn in self.meta[item]:
+            for fn in self.meta[item][::10]:    # use subset for fast training/testing in hands-on session
                 self.datapath.append((item, fn[0], fn[1]))
 
-
+        self.idx2cls = dict(zip(range(len(self.cat)), sorted(self.cat)))
+        
         self.classes = dict(zip(sorted(self.cat), range(len(self.cat))))
         print(self.classes)
         self.num_seg_classes = 0

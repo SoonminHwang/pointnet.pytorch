@@ -1,5 +1,6 @@
 .ipynb_checkpoints/
 data
+results
 *.pyc
 shapenetcore_partanno_segmentation_benchmark_v0/
 *.so
