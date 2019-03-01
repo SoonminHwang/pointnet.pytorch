@@ -1,3 +1,3 @@
-wget -P ../dataset/ https://shapenet.cs.stanford.edu/ericyi/shapenetcore_partanno_segmentation_benchmark_v0.zip --no-check-certificate
-unzip ../dataset/shapenetcore_partanno_segmentation_benchmark_v0.zip
-rm ../dataset/shapenetcore_partanno_segmentation_benchmark_v0.zip
+wget https://shapenet.cs.stanford.edu/ericyi/shapenetcore_partanno_segmentation_benchmark_v0.zip --no-check-certificate
+unzip -d ../dataset/ shapenetcore_partanno_segmentation_benchmark_v0.zip
+rm shapenetcore_partanno_segmentation_benchmark_v0.zip
