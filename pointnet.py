@@ -54,11 +54,12 @@ class T_Net(nn.Module):
 
 
 class OrderInvariance(nn.Module):
-    def __init__(self, symmetric='max'):
+    def __init__(self, symmetric='unsorted', use_t_net=False):
         super(OrderInvariance, self).__init__()
         self.T_net = T_Net()
 
         self.symmetric = symmetric
+        self.use_t_net = use_t_net
                 
         self.conv1 = torch.nn.Conv1d(3, 64, 1)
         self.conv2 = torch.nn.Conv1d(64, 128, 1)
@@ -76,38 +77,55 @@ class OrderInvariance(nn.Module):
         """ T-NET """
         trans    = self.T_net(x)                    # [32, 3, 3]
         x        = x.transpose(2,1)                 # [32, 2500, 3]
-#         # batch-level matrix multiplication
-#         x        = torch.bmm(x, trans) 
+        
+        if self.use_t_net:
+            # batch-level matrix multiplication
+            x = torch.bmm(x, trans) 
 
         """ Permutation invariance """
         if self.symmetric == 'unsorted':
-           x     = self.unsort_MLP( x );
+            x = self.unsort_MLP( x );
 
-        x        = x.transpose(2,1)                 # [ 32, 3, 2500]
+        x        = x.transpose(2,1)                 # [32,   3, 2500]
         x        = F.relu(self.bn1(self.conv1(x)))  # [32,  64, 2500]
         x        = F.relu(self.bn2(self.conv2(x)))  # [32, 128, 2500]
         x        = self.bn3(self.conv3(x))          # [32,1024, 2500]
-
-        """ permutation types """
+        
+        """" permutation types """
         if   self.symmetric == 'max':
-             x  = torch.max(x, 2, keepdim=True)[0] # [32,1024, 1]
+            ## [TODO] raise NotImplementedError를 지우고 torch.max를 활용하세요. (1 line)
+            ## hint: torch.max 함수의 입력/출력 데이터의 크기(x.shape)는 동일하게 유지되어야 합니다.
+            ## x.shape: [32,1024, 1]
+#             raise NotImplementedError
+            x  = torch.max(x, 2, keepdim=True)[0] # [32,1024, 1]
+            
         elif self.symmetric == 'avg':
-             x  = torch.mean(x, 2, keepdim=True)   # [32,1024, 1]        
+            ## [TODO] raise NotImplementedError를 지우고 torch.mean을 활용하세요. (1 line)
+            ## hint: torch.mean 함수의 입력/출력 데이터의 크기(x.shape)는 동일하게 유지되어야 합니다.
+            ## x.shape: [32,1024, 1]
+#             raise NotImplementedError
+            x  = torch.mean(x, 2, keepdim=True)   # [32,1024, 1]        
+             
         else:
-             x  = x;
+             pass
+             
         x        = x.view(-1, 1024)                 # [32,1024]
 
         return x, trans
 
 
 class PointNetCls(nn.Module):
-    def __init__(self, k = 2, symmetric='unsorted'):
+    def __init__(self, k = 2, symmetric='unsorted', use_t_net=False):
         super(PointNetCls, self).__init__()
 
         self.symmetric = symmetric;
         self.name  = '{:s}_{:s}'.format(self.__class__.__name__, self.symmetric)
+        if use_t_net:
+            self.name += '_with_T-Net'
+        else:
+            self.name += '_without_T-Net'                
         
-        self.feat = OrderInvariance(symmetric=symmetric) ;
+        self.feat = OrderInvariance(symmetric=symmetric, use_t_net=use_t_net)
 
         self.fc1 = nn.Linear(1024, 512)
         self.fc2 = nn.Linear(512, 256)
