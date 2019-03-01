@@ -18,6 +18,7 @@ from pointnet import PointNetCls
 import torch.nn.functional as F
 
 
+DB_NAME = '../dataset/shapenetcore_partanno_segmentation_benchmark_v0'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--batchSize', type=int, default=32, help='input batch size')
@@ -37,13 +38,11 @@ print("Random Seed: ", opt.manualSeed)
 random.seed(opt.manualSeed)
 torch.manual_seed(opt.manualSeed)
 
-dataset = PartDataset(root = 'shapenetcore_partanno_segmentation_benchmark_v0', classification = True, npoints = opt.num_points)
-dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize,
-                                          shuffle=True, num_workers=int(opt.workers))
+dataset = PartDataset(root=DB_NAME, classification = True, npoints = opt.num_points)
+dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize, shuffle=True, num_workers=int(opt.workers))
 
-test_dataset = PartDataset(root = 'shapenetcore_partanno_segmentation_benchmark_v0', classification = True, train = False, npoints = opt.num_points)
-testdataloader = torch.utils.data.DataLoader(test_dataset, batch_size=opt.batchSize,
-                                          shuffle=True, num_workers=int(opt.workers))
+test_dataset = PartDataset(root=DB_NAME, classification = True, train = False, npoints = opt.num_points)
+testdataloader = torch.utils.data.DataLoader(test_dataset, batch_size=opt.batchSize, shuffle=True, num_workers=int(opt.workers))
 
 print(len(dataset), len(test_dataset))
 num_classes = len(dataset.classes)
@@ -55,7 +54,8 @@ except OSError:
     pass
 
 
-classifier = PointNetCls(k = num_classes, num_points = opt.num_points)
+# classifier = PointNetCls(k = num_classes, num_points = opt.num_points)
+classifier = PointNetCls(k = num_classes)
 
 
 if opt.model != '':
@@ -70,7 +70,8 @@ num_batch = len(dataset)/opt.batchSize
 for epoch in range(opt.nepoch):
     for i, data in enumerate(dataloader, 0):
         points, target = data
-        points, target = Variable(points), Variable(target[:,0])
+#         points, target = Variable(points), Variable(target[:,0])
+        target = target[:,0]
         points = points.transpose(2,1)
         points, target = points.cuda(), target.cuda()
         optimizer.zero_grad()
